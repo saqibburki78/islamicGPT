@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-serif: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Color tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+
+  /* Animation keyframes */
+  --animate-typing-dot-bounce: typing-dot-bounce 1.25s ease-out infinite;
+  --animate-fade-in: fade-in 0.6s ease-out; /* Slower, more elegant */
+  --animate-slide-in-left: slide-in-left 0.6s ease-out;
+  --animate-slide-in-right: slide-in-right 0.6s ease-out;
+  --animate-lux-float: lux-float 6s ease-in-out infinite;
+
+  @keyframes typing-dot-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-0.5rem); opacity: 1; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(1rem); } /* deeper start */
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-in-left {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes slide-in-right {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes lux-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+  }
+}
+
+/* Root color variables - Luxury Old Money Palette */
+:root {
+  --radius: 0.5rem; /* Sharper corners for elegance */
+
+  /* Deep Forest Green & Gold Palette */
+  /* Using specific hexes converted to oklch or just keeping them for reference, but fitting into system */
+  
+  /* Background: Very deep green, almost black: #051a12 */
+  --background: oklch(0.15 0.04 150); 
+  
+  /* Foreground: Cream/Off-white: #f5f5dc */
+  --foreground: oklch(0.96 0.03 95); 
+
+  /* Card: Slightly lighter deep green: #0a241a */
+  --card: oklch(0.18 0.05 150);
+  --card-foreground: oklch(0.96 0.03 95);
+
+  /* Popover */
+  --popover: oklch(0.16 0.04 150);
+  --popover-foreground: oklch(0.96 0.03 95);
+
+  /* Primary: Gold: #D4AF37 */
+  --primary: oklch(0.78 0.15 85);
+  --primary-foreground: oklch(0.15 0.04 150);
+
+  /* Secondary: Rich darker gold/bronze: #aa8c2c */
+  --secondary: oklch(0.25 0.05 150); 
+  --secondary-foreground: oklch(0.90 0.05 85);
+
+  /* Muted */
+  --muted: oklch(0.22 0.04 150);
+  --muted-foreground: oklch(0.70 0.05 150);
+
+  /* Accent: Emerald Green */
+  --accent: oklch(0.25 0.06 150);
+  --accent-foreground: oklch(0.96 0.03 95);
+
+  --destructive: oklch(0.6 0.2 25);
+  
+  /* Border: Subtle Gold/Bronze */
+  --border: oklch(0.78 0.15 85 / 0.15);
+  --input: oklch(0.20 0.05 150);
+  --ring: oklch(0.78 0.15 85 / 0.5);
+
+  /* Sidebar */
+  --sidebar: oklch(0.13 0.04 150);
+  --sidebar-foreground: oklch(0.96 0.03 95);
+  --sidebar-border: oklch(0.78 0.15 85 / 0.1);
+  
+  /* Custom Gold Variables */
+  --gold: oklch(0.78 0.15 85);
+  --gold-dim: oklch(0.78 0.15 85 / 0.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased font-serif;
+    background-image: 
+        radial-gradient(circle at 50% 0%, oklch(0.20 0.06 150 / 0.4), transparent 70%);
+  }
+  
+  /* Typography Overrides */
+  h1, h2, h3, h4, h5, h6 {
+      @apply font-serif tracking-tight text-gold;
+  }
+  
+  p, span, div, li, a {
+     /* Body text can be sans or serif, usually serif for old money but sans is cleaner for chat */
+     @apply font-sans;
+  }
+
+  /* Custom Clean Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gold/20 hover:bg-gold/40 transition-colors;
+    border-radius: 99px;
+  }
+}
+
+/* Luxury Utilities */
+@layer utilities {
+  .text-gold {
+      color: var(--gold);
+  }
+  
+  .border-gold {
+      border-color: var(--gold);
+  }
+  
+  .bg-gold {
+      background-color: var(--gold);
+  }
+
+  /* Glass - Crystal Style */
+  .glass {
+    background: linear-gradient(135deg, rgba(20, 40, 30, 0.6), rgba(10, 30, 20, 0.7));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--sidebar-border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-panel {
+    background: rgba(15, 35, 25, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--sidebar-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .lux-border {
+      border: 1px solid var(--gold-dim);
+  }
+  
+  .lux-border-b {
+      border-bottom: 1px solid var(--gold-dim);
+  }
+  
+  .lux-input {
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius);
+      border: 1px solid var(--gold-dim);
+      transition: all 0.3s ease;
+  }
+  
+  .lux-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 15px var(--gold-dim);
+      background: rgba(0,0,0,0.3);
+  }
+}

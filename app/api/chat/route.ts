@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import Chat from "@/Actions/openai";
 import { getQdrantVectorStore } from "@/lib/qdrant";
+
 export async function GET() {
-    // We cannot return the vectorStore object directly as it is not serializable
-    const vectorStore = await getQdrantVectorStore();
-    console.log("Vector Store:", vectorStore);
-    return NextResponse.json({ status: "Qdrant Vector Store is ready" });
+    const response = await getQdrantVectorStore(
+        "C:/Users/fool/Desktop/lillith/Islamic_Books/Hadith/sunan abu dawud/Sunan Abu Dawud Vol. 5 - 4351-5274.pdf",
+        {
+            title: "Sunan Abu Dawud Vol. 5",
+            author: "Imam Abu Dawud",
+            category: "Hadith",
+            collection: "Books",
+            authanticity: "Authentic",
+        }
+    );
+    console.log(response);
+    return NextResponse.json({ status: "Reload the page to ingest the next book. response: " });
 }
 export async function POST(request: Request) {
     try {

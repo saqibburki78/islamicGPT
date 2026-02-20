@@ -1,19 +1,14 @@
 import { generateText, stepCountIs, streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, tool } from "ai";
 import { z } from "zod";
 import { getQdrantVectorStore } from "@/lib/qdrant";
 
 const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY_6,
 });
 
 const modelMap: Record<string, any> = {
-  "gpt-4o": openai("gpt-4o"),
-  "gpt-4o-mini": openai("gpt-4o-mini"),
-  "gpt-3.5-turbo": openai("gpt-3.5-turbo"),
-  "gpt-4": openai("gpt-4"),
   "gemini-2.5-flash": google("gemini-2.5-flash"),
   "gemini-3-flash": google("gemini-3-flash"),
 };
@@ -130,14 +125,14 @@ export default async function Chat(
 
               if (category === 'Hadith' || category === 'All') {
                 const hadithStore = await getQdrantVectorStore("Hadith");
-                const hadithResults = await hadithStore.similaritySearch(query, 5);
-                results = [...results, ...hadithResults.map((r: any) => ({ ...r, source_type: 'Hadith' }))];
+                // const hadithResults = await hadithStore.similaritySearch(query, 5);
+                // results = [...results, ...hadithResults.map((r: any) => ({ ...r, source_type: 'Hadith' }))];
               }
 
               if (category === 'Tafseer' || category === 'All') {
                 const tafseerStore = await getQdrantVectorStore("Tafseer");
-                const tafseerResults = await tafseerStore.similaritySearch(query, 5);
-                results = [...results, ...tafseerResults.map((r: any) => ({ ...r, source_type: 'Tafseer' }))];
+                // const tafseerResults = await getQdrantVectorStore.similaritySearch(query, 5);
+                // results = [...results, ...tafseerResults.map((r: any) => ({ ...r, source_type: 'Tafseer' }))];
               }
 
               console.log(`Found ${results.length} results for query: "${query}" in category: ${category}`);

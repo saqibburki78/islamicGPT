@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
 import Chat from "@/Actions/openai";
-import { getQdrantVectorStore } from "@/lib/qdrant";
+import { getQdrantSearchStore, getQdrantVectorStore } from "@/lib/qdrant";
 
 export async function GET() {
     const response = await getQdrantVectorStore(
-        "C:/Users/fool/Desktop/lillith/Islamic_Books/Hadith/sunan abu dawud/Sunan Abu Dawud Vol. 5 - 4351-5274.pdf",
+        "C:\\Users\\fool\\Desktop\\lillith\\Islamic_Books\\Hadith\\Sahih_Bukhari\\en_Sahih_Al-Bukhari-1329-1535.pdf",
         {
-            title: "Sunan Abu Dawud Vol. 5",
-            author: "Imam Abu Dawud",
+            title: "Sahih Al-Bukhari volume 8-1535",
+            author: "Imam Al-Bukhari",
             category: "Hadith",
-            collection: "Books",
+            collection: "Hadith",
             authanticity: "Authentic",
         }
     );
     console.log(response);
-    return NextResponse.json({ status: "Reload the page to ingest the next book. response: " });
+    // const response = await getQdrantSearchStore("Tafseer", "What is the meaning of Surah Al-Fatihah?")
+    // console.log(response);
+    return  NextResponse.json({ message: "Reload to ingest data into qdrant, then check console for results" });
 }
 export async function POST(request: Request) {
     try {

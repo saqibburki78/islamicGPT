@@ -30,8 +30,8 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <Menu className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-700 via-gray-800 to-gray-600 bg-clip-text text-white">
-              Lillith
+            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gold via-gray-800 to-gray-600 bg-clip-text text-gold">
+              islamicGPT
             </h1>
           </div>
         )}

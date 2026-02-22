@@ -2,17 +2,44 @@ import { generateText, stepCountIs, streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, tool } from "ai";
 import { z } from "zod";
-import { getQdrantVectorStore } from "@/lib/qdrant";
+import { getQdrantVectorStore, getQdrantSearchStore } from "@/lib/qdrant";
+import { QdrantVectorStore } from "@langchain/qdrant";
 
 const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY_6,
+  apiKey: process.env.GEMINI_API_KEY_1,
 });
 
 const modelMap: Record<string, any> = {
   "gemini-2.5-flash": google("gemini-2.5-flash"),
   "gemini-3-flash": google("gemini-3-flash"),
 };
-const SYSTEM_PROMPT = "You are a helpful assistant which give user answers and use tools to fetch real time information when needed.";
+const SYSTEM_PROMPT = `You are a Sepecilized AI Assistant which can call the available tools to fetch news weather ialmaic information and can answer user queries based on the information fetched from the tools 
+ 
+Rules:
+0.Most fouced on Islamic information.
+1. Always use the tools to fetch information.
+2. Always respond to the user in the same language as the user's query.
+3. Always respond to the user in a concise and informative manner.
+4. Always respond to the user in a friendly and helpful manner.
+5. if the user asks for the news, weather or islamic information, use the tools to fetch the information and respond to the user.
+6. if the data from the tools is croupted or you are not sure about the data, respond to the user that you are not sure about the data.
+7.Get the required information from the user if not provided the Procced with tools 
+Avaiable tools are:
+1. news: Search for news articles or get top headlines.
+2. weather: fetch weather information for a given city using OpenWeatherMap API.
+3. islamicGPT: Fetch Islamic information from Hadiths and Tafseer.
+
+Eamples:
+USER: what is the weather in karachi?
+AI: fetch weather information for karachi using weather tool and respond to the user. 
+
+USER: what is the news about the tech?
+AI: fetch news about the tech using news tool and respond to the user. 
+
+USER: what is the islamic information about the hadith?
+AI: fetch islamic information about the hadith using islamicGPT tool and respond to the user. 
+
+`;
 
 export default async function Chat(
   messages: any,
@@ -113,7 +140,7 @@ export default async function Chat(
         islamicGPT: tool({
           description: "Fetch Islamic information from Hadiths and Tafseer.",
           parameters: z.object({
-            query: z.string().describe("search query for Islamic information."),
+            query: z.string().describe("Retirive information from Hadiths and Tafseer."),
             category: z.enum(['Hadith', 'Tafseer', 'All']).optional().default('All').describe("Optional category to narrow down the search. Defaults to searching both.")
           }),
           execute: async ({ query, category = 'All' }: { query: string, category?: 'Hadith' | 'Tafseer' | 'All' }) => {
@@ -124,15 +151,20 @@ export default async function Chat(
               let results: any[] = [];
 
               if (category === 'Hadith' || category === 'All') {
-                const hadithStore = await getQdrantVectorStore("Hadith");
-                // const hadithResults = await hadithStore.similaritySearch(query, 5);
-                // results = [...results, ...hadithResults.map((r: any) => ({ ...r, source_type: 'Hadith' }))];
+                const hadithStore = await getQdrantSearchStore("Hadith");
+                const hadithResults = await hadithStore.similaritySearch(query, 5);
+                results = [...results, ...hadithResults.map((r: any) => ({ ...r, source_type: 'Hadith' }))];
+                console.log("hadithResults", hadithResults);  
+
+                return hadithResults;
               }
 
               if (category === 'Tafseer' || category === 'All') {
-                const tafseerStore = await getQdrantVectorStore("Tafseer");
-                // const tafseerResults = await getQdrantVectorStore.similaritySearch(query, 5);
-                // results = [...results, ...tafseerResults.map((r: any) => ({ ...r, source_type: 'Tafseer' }))];
+                const tafseerStore = await getQdrantSearchStore("Tafseer");
+                const tafseerResults = await tafseerStore.similaritySearch(query, 5);
+                results = [...results, ...tafseerResults.map((r: any) => ({ ...r, source_type: 'Tafseer' }))];
+
+                return tafseerResults;
               }
 
               console.log(`Found ${results.length} results for query: "${query}" in category: ${category}`);

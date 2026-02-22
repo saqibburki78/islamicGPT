@@ -11,9 +11,9 @@ type Model = {
 }
 
 const models: Model[] = [
-    { id: 'gpt-4', name: 'GPT-4', description: 'Most capable model' },
-    { id: 'gpt-3.5', name: 'GPT-3.5 Turbo', description: 'Fast and efficient' },
-    { id: 'claude-3', name: 'Claude 3', description: 'Thoughtful responses' },
+    { id: '1', name: 'gemini-2.5-flash', description: 'Most capable model' },
+    { id: '2', name: 'gemini-1.5-pro', description: 'Fast and efficient' },
+    { id: '3', name: 'gemini-1.0-flash', description: 'Thoughtful responses' },
 ]
 
 type ModelSelectorProps = {
@@ -22,7 +22,7 @@ type ModelSelectorProps = {
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
-    selectedModel = 'gpt-4',
+    selectedModel = '1',
     onModelChange
 }) => {
     const [isOpen, setIsOpen] = useState(false)

@@ -302,10 +302,10 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
                   </div>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-serif font-medium text-gold mb-6 tracking-tight">
-                  Welcome to Lillith
+                  Welcome to islamicGPT
                 </h2>
                 <p className="text-lg text-muted-foreground font-light max-w-lg mx-auto leading-relaxed">
-                  Experience intelligence refined. Begin your inquiry below.
+                  Ask anything about Islam, Quran, Hadith, or Islamic history and get instant answers powered by AI. Your personal Islamic scholar, available 24/7.
                 </p>
               </motion.div>
             )}

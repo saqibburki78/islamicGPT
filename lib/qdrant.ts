@@ -1,8 +1,20 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { QdrantVectorStore } from "@langchain/qdrant";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * Cleans text by removing control characters and normalizing whitespace.
+ * This is safe for Arabic and all other languages.
+ */
+function cleanText(text: string): string {
+    return text
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "") // Remove control characters only
+        .replace(/\s+/g, " ") // Normalize spaces
+        .trim();
+}
 
 // Helper for throttling
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -10,8 +22,6 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function getQdrantVectorStore(filepath: string, metadata: Record<string, any> = {}) {
     // Collect available keys inside the function to ensure they are loaded
     const GEMINI_KEYS = [
-        process.env.GEMINI_API_KEY_1,
-        process.env.GEMINI_API_KEY_2,
         process.env.GEMINI_API_KEY_3,
         process.env.GEMINI_API_KEY_4,
         process.env.GEMINI_API_KEY_5,
@@ -36,7 +46,9 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
         chunkOverlap: 200,
     });
     const splitDocs = await splitter.splitDocuments(docs);
-    const chunks = splitDocs.map(doc => doc.pageContent);
+
+    // Clean each chunk - CRITICAL to avoid "Empty vector" from garbage characters
+    const chunks = splitDocs.map(doc => cleanText(doc.pageContent)).filter(c => c.length > 5);
 
     // 3. Initialize Qdrant Client
     const client = new QdrantClient({
@@ -45,9 +57,7 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
         checkCompatibility: false,
     });
 
-    // 4. Generate embeddings and store in Qdrant using ROBUST BATCHING
-    // This fixed the 422 error by ensuring flat vectors and unique UUIDs
-    const batchSize = 50;
+    const batchSize = 20;
     const allEmbeddings: number[][] = [];
     const collectionName = metadata.collection || 'Tafseer';
 
@@ -66,7 +76,7 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
             console.log(`Batch ${Math.floor(i / batchSize) + 1} (Attempt ${attempt + 1}): Using Key #${keyIndex + 1}...`);
 
             const embeddingModel = new GoogleGenerativeAIEmbeddings({
-                modelName: "gemini-embedding-001", // Updated to 3072-dim model
+                modelName: "gemini-embedding-001", // FIXED TYPO: "embeddings" -> "embedding"
                 apiKey: currentKey
             });
 
@@ -79,12 +89,12 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
                 const points = batchChunks.map((chunk, j) => {
                     const vector = batchEmbeddings[j];
                     if (!vector || vector.length === 0) {
-                        console.warn(`Warning: Empty vector generated for chunk ${i + j}. Text snippet: "${chunk.substring(0, 100)}..."`);
+                        console.warn(`Warning: Empty vector generated for chunk ${i + j}`);
                         return null;
                     }
                     if (vector.length !== 3072) {
-                        console.warn(`Warning: Vector dimension mismatch for chunk ${i + j}. Expected 3072, got ${vector.length}. Text snippet: "${chunk.substring(0, 100)}..."`);
-                        // Optionally pad or skip, but for now we skip to avoid 400 errors
+                        console.warn(`Warning: Vector dimension mismatch for chunk ${i + j}. Expected 3072, got ${vector.length}.`);
+                        // Note: gemini-embedding-001 will return 768. If the DB expects 3072, this will always fail.
                         return null;
                     }
                     return {
@@ -101,7 +111,7 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
 
                 if (points.length === 0) {
                     console.error(`No valid points to upsert for batch ${Math.floor(i / batchSize) + 1}`);
-                    batchSuccess = true; // Move to next batch to avoid infinite loop
+                    batchSuccess = true;
                     continue;
                 }
 
@@ -133,7 +143,6 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
             throw new Error(`Failed batch ${Math.floor(i / batchSize) + 1} after trying all keys.`);
         }
 
-        // Delay between batches to respect rate limits
         if (i + batchSize < chunks.length) {
             await sleep(1000);
         }
@@ -142,4 +151,29 @@ export async function getQdrantVectorStore(filepath: string, metadata: Record<st
     console.log(`Successfully ingested ${chunks.length} chunks into Qdrant collection '${collectionName}'`);
     return allEmbeddings;
 }
+
+/**
+ * Returns a LangChain VectorStore for searching a specific collection
+ */
+export async function getQdrantSearchStore(collectionName: string, query: string) {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY_1 || process.env.GEMINI_API_KEY_2;
+
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+        modelName: "gemini-embedding-001",
+        apiKey: GEMINI_API_KEY,
+    });
+
+    const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+        url: process.env.QDRANT_URL,
+        collectionName,
+        apiKey: process.env.QDRANT_API_KEY,
+    });
+    const results1 = await vectorStore.similaritySearch(
+        query
+    );
+
+    console.log(results1[0]);
+    return results1;
+}
+
 

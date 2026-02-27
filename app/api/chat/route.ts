@@ -4,17 +4,17 @@ import { getQdrantSearchStore, getQdrantVectorStore } from "@/lib/qdrant";
 
 export async function GET() {
     const response = await getQdrantVectorStore(
-        "C:\\Users\\fool\\Desktop\\lillith\\Islamic_Books\\Hadith\\Sahih_Bukhari\\en_Sahih_Al-Bukhari-1329-1535.pdf",
+        "C:\\Users\\fool\\Desktop\\lillith\\Islamic_Books\\Tafseer\\al qurtubi\\Tafsir al-Qurtubi Vol. 4.pdf",
         {
-            title: "Sahih Al-Bukhari volume 8-1535",
-            author: "Imam Al-Bukhari",
-            category: "Hadith",
-            collection: "Hadith",
+            title: "Tafsir al-Qurtubi vol 4",
+            author: "al-Qurtubi",
+            category: "Tafseer",
+            collection: "Tafseer",
             authanticity: "Authentic",
         }
     );
     console.log(response);
-    // const response = await getQdrantSearchStore("Tafseer", "What is the meaning of Surah Al-Fatihah?")
+    // const response = await getQdrantSearchStore("Tafseer", "Tafsīr al-Qurṭubī")
     // console.log(response);
     return  NextResponse.json({ message: "Reload to ingest data into qdrant, then check console for results" });
 }

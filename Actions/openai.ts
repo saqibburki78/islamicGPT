@@ -2,8 +2,7 @@ import { generateText, stepCountIs, streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, tool } from "ai";
 import { z } from "zod";
-import { getQdrantVectorStore, getQdrantSearchStore } from "@/lib/qdrant";
-import { QdrantVectorStore } from "@langchain/qdrant";
+import { getQdrantSearchStore } from "@/lib/qdrant";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY_1,
@@ -13,7 +12,7 @@ const modelMap: Record<string, any> = {
   "gemini-2.5-flash": google("gemini-2.5-flash"),
   "gemini-3-flash": google("gemini-3-flash"),
 };
-const SYSTEM_PROMPT = `You are a Sepecilized AI Assistant which can call the available tools to fetch news weather ialmaic information and can answer user queries based on the information fetched from the tools 
+const SYSTEM_PROMPT = `You are a Sepecilized AI Assistant which can call the available tools to fetch ialmaic information and can answer user queries based on the information fetched from the tools 
  
 Rules:
 0.Most fouced on Islamic information.
@@ -48,7 +47,7 @@ export default async function Chat(
   try {
     const selectedModel = modelMap[model] || modelMap["gemini-2.5-flash"];
 
-    const result = await streamText({
+    const result = streamText({
       model: selectedModel,
       messages: messages,
       system: SYSTEM_PROMPT,
@@ -88,7 +87,7 @@ export default async function Chat(
             endpoint: z.enum(['everything', 'top-headlines']).optional().default('everything').describe("The API endpoint. Defaults to 'everything'."),
             country: z.string().optional().describe("The 2-letter ISO 3166-1 country code (e.g., 'us', 'in')."),
           }),
-          execute: async ({ query, endpoint, country }: { query?: string; endpoint?: 'everything' | 'top-headlines'; country?: string }) => {
+          execute: async ({ query, endpoint, country }: { query?: string; endpoint?: 'everything' | 'top-headlines'; country?: string; }) => {
             try {
               const params = new URLSearchParams();
               // API Key is always required
@@ -108,7 +107,7 @@ export default async function Chat(
               const data = await response.json();
               return data;
             } catch (error: any) {
-              console.error("Error in news tool:", error.message);
+
               return `Error fetching news: ${error.message}`;
             }
           },
@@ -118,22 +117,22 @@ export default async function Chat(
           parameters: z.object({
             city: z.string().describe('Get the city name From the user to fetch weather information of that particular city'),
           }),
-          execute: async (city: { city: string }) => {
+          execute: async (city: { city: string; }) => {
             try {
-              const params = new URLSearchParams()
+              const params = new URLSearchParams();
               const cityName = city.city;
-              params.append("appid", process.env.WEATHER_API_KEY || "")
+              params.append("appid", process.env.WEATHER_API_KEY || "");
               if (!cityName) {
-                return
+                return;
               } else {
-                params.append("q", cityName)
+                params.append("q", cityName);
               }
-              console.log("params", params.toString())
+
               const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?${params.toString()}&units=metric`);
               const data = await response.json();
               return data;
             } catch (error: any) {
-              console.log("error in weather tool:", error)
+
             }
           }
         }),
@@ -141,36 +140,17 @@ export default async function Chat(
           description: "Fetch Islamic information from Hadiths and Tafseer.",
           parameters: z.object({
             query: z.string().describe("Retirive information from Hadiths and Tafseer."),
-            category: z.enum(['Hadith', 'Tafseer', 'All']).optional().default('All').describe("Optional category to narrow down the search. Defaults to searching both.")
+            collectionName: z.enum(['Hadith', 'Tafseer', 'All']).optional().default('All').describe("Optional category to narrow down the search. Defaults to searching both.")
           }),
-          execute: async ({ query, category = 'All' }: { query: string, category?: 'Hadith' | 'Tafseer' | 'All' }) => {
-            if (!query) {
-              return "Please provide a search query for Islamic information.";
-            }
+          execute: async ({ query, collectionName = 'Hadith' }: { query: string; collectionName?: 'Hadith' | 'Tafseer' | 'All'; }) => {
             try {
-              let results: any[] = [];
+              const response = await getQdrantSearchStore(collectionName, query);
+              const result = await response.text;
 
-              if (category === 'Hadith' || category === 'All') {
-                const hadithStore = await getQdrantSearchStore("Hadith");
-                const hadithResults = await hadithStore.similaritySearch(query, 5);
-                results = [...results, ...hadithResults.map((r: any) => ({ ...r, source_type: 'Hadith' }))];
-                console.log("hadithResults", hadithResults);  
+              return result;
 
-                return hadithResults;
-              }
-
-              if (category === 'Tafseer' || category === 'All') {
-                const tafseerStore = await getQdrantSearchStore("Tafseer");
-                const tafseerResults = await tafseerStore.similaritySearch(query, 5);
-                results = [...results, ...tafseerResults.map((r: any) => ({ ...r, source_type: 'Tafseer' }))];
-
-                return tafseerResults;
-              }
-
-              console.log(`Found ${results.length} results for query: "${query}" in category: ${category}`);
-              return results;
             } catch (error: any) {
-              console.error("Error in islamicGPT tool:", error);
+
               return `Error fetching Islamic information: ${error.message}`;
             }
           }
@@ -180,7 +160,7 @@ export default async function Chat(
     });
     return result;
   } catch (error: any) {
-    console.error(`Error in openai.ts file ${error?.message}`);
+
     throw error;
   }
 }

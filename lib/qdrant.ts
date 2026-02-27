@@ -183,9 +183,9 @@ export async function getQdrantVectorStore(
   return allEmbeddings;
 }
 
-/**
- * Returns a LangChain VectorStore for searching a specific collection
- */
+// /**
+//  * Returns a LangChain VectorStore for searching a specific collection
+//  */
 export async function getQdrantSearchStore(
   collectionName: string,
   query: string,

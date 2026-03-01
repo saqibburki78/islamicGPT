@@ -27,6 +27,10 @@ export async function POST(request: Request) {
         }));
         const result = await Chat(coreMessages, "gemini-2.5-flash");
 
+        if (typeof result === "string") {
+            return NextResponse.json({ error: result }, { status: 500 });
+        }
+
         return result.toUIMessageStreamResponse();
     } catch (error: any) {
 

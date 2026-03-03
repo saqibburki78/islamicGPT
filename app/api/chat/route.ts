@@ -14,8 +14,8 @@ export async function GET() {
     //         }
     //     );
     //     console.log(response);
-    // const response = await getQdrantSearchStore("Tafseer", "Tafsīr al-Qurṭubī")
-    // console.log(response);
+    //  const response = await getQdrantSearchStore();
+                // console.log("response",response)
     return NextResponse.json({ message: "Reload to ingest data into qdrant, then check console for results" });
 }
 export async function POST(request: Request) {

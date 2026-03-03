@@ -187,11 +187,9 @@ export async function getQdrantVectorStore(
 //  * Returns a LangChain VectorStore for searching a specific collection
 //  */
 export async function getQdrantSearchStore(
-  collectionName: string,
-  query: string,
+  collectionName:string,
+  query:string
 ) {
- 
-  console.log("process.env.GEMINI_API_KEY_4",process.env.GEMINI_API_KEY_4,"coolectionName",collectionName ,"query",query)
   const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
@@ -201,19 +199,19 @@ export async function getQdrantSearchStore(
     try {
       const embeddings = new GoogleGenerativeAIEmbeddings({
         modelName: "gemini-embedding-001",
-        apiKey: process.env.GEMINI_API_KEY_4,
+        apiKey: process.env.GEMINI_API_KEY_1,
       });
 
-      const queryEmbedding = await embeddings.embedQuery("what does quran say about jannah");
+      const queryEmbedding = await embeddings.embedQuery("what does allah say about jews");
       const results = await client.search("Hadith", {
         vector: queryEmbedding,
         limit: 5,
       });
       console.log("queryEmbedding",queryEmbedding);
-      console.log(results);
+      console.log("results from",results);
       return results;
     } catch (error: any) {
-      console.warn(`Key failed: ${error}`);
+      console.log(`Key failed: ${error}`);
     }
   }
 

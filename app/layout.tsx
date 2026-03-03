@@ -15,8 +15,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Lillith - Luxury AI Assistant",
-  description: "A sophisticated, premium chatbot interface.",
+  title: "islamicGPT that search Across most authintic Hadith and Tafseer Books",
+  description: "It is A RAG Applicatin that search through the most authic islmaic books and give answer from it.",
 };
 
 

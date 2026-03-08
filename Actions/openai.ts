@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, tool } from "ai";
 import { z } from "zod";
 import { getQdrantSearchStore } from "@/lib/qdrant";
+import { SYSTEM_PROMPT } from "@/lib/systemPrompt";
 
 
 const google = createGoogleGenerativeAI({
@@ -13,11 +14,6 @@ const modelMap: Record<string, any> = {
   "gemini-2.5-flash": google("gemini-2.5-flash"),
   "gemini-3-flash": google("gemini-3-flash"),
 };
-const SYSTEM_PROMPT = `Your are an Agent that call islamicGPT tool when user ask about Hadith Tafseer annthing releated to islam the islmicGPT tool required two paramameter one is CollectionName And the other is Query that you want to search on that particular Collection A similarity search islmaicGPT has a function that required this two paras which then make similarty search in qdrant db you can make or improve the user query by your self if nessacary for better search result.
-you have two collection one is Hadith and other is Tafseer pass just one collectionName and it is nessaccry
-and pass just query onthing else and both should be in a string format
-you have to explain it like you are explaining it to a 10 year child
-`;
 
 export default async function Chat(
   messages: any,
@@ -43,7 +39,7 @@ export default async function Chat(
   for (const currentKey of GEMINI_KEYS) {
     try {
       const googleConfig = createGoogleGenerativeAI({
-        apiKey: process.env.GEMINI_API_KEY_10,
+        apiKey: currentKey,
       });
 
       const modelMapFallback: Record<string, any> = {
@@ -124,28 +120,26 @@ export default async function Chat(
           islamicGPT: tool({
             description: `
             You are an Ai agent the make similaritysearch in qdrant db with getQdrantSearchStore. Your task is to search for Islamic information from Hadiths and Tafseer based on the user's query.The collection by default is Hadith but if the user asks for Tafseer then the collection will be Tafseer.
-           this function requrired two paramater one is collectionName other is query for similarty search
-            You have to call getQdrantSearchStore function to search for the query in the collection.
-            getQdrantSearchStore(collectionName: string, query: string)
-            this function want a string collcetion name and string query pass those values to the function.
-            it must be  pass  you can pass only one collection name at a time.
-             it must be Hadith or Tafseer. nothing else
-
               this is the syntax to call a function
+              it required two params of collectionName  where you should pass either Hadith or Tafseer
+              it required second param of query where you should pass the user query
+              getQdrantSearchStore(collectionName,query)
               getQdrantSearchStore("Tafseer","what does allah say about jews in Quran")
               getQdrantSearchStore("Hadith","what does allah say about jihhad")
+              RULES:
+              just pass one value Hadith or Tafseer in CollectionName nothing else 
+                just pass the query which the user want in qUery
             `,
             parameters: z.object({
               collectionName: z.enum(['Hadith', 'Tafseer']).default('Hadith').describe("The collection name to search in. It can be 'Hadith' or 'Tafseer'."),
-              query: z.string().describe("Query to search in the Hadiths and Tafseer."),
+              query: z.string().describe("the user Query to search in the Hadiths and Tafseer."),
             }),
             // @ts-ignore
-            execute: async (query: string, collectionName: 'Hadith' | 'Tafseer') => {
+            execute: async (args: any) => {
               try{
-                const response = await getQdrantSearchStore(collectionName,query);
-                console.log("response",response)
-                console.log('collectionName',collectionName)
-                console.log("query",query)
+                const response = await getQdrantSearchStore(args.collectionName,args.query);
+                console.log('collectionName form openai',args.collectionName)
+                console.log('query form openai',args.query)
                 return response;
               }catch(error: any){
                 console.warn(`API key validation failed: ${error.message}`);

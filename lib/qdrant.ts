@@ -190,6 +190,8 @@ export async function getQdrantSearchStore(
   collectionName:string,
   query:string
 ) {
+  console.log("this fucntion get called")
+  console.log("collectionName",collectionName,"query",query)
   const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
@@ -199,16 +201,15 @@ export async function getQdrantSearchStore(
     try {
       const embeddings = new GoogleGenerativeAIEmbeddings({
         modelName: "gemini-embedding-001",
-        apiKey: process.env.GEMINI_API_KEY_1,
+        apiKey: process.env.GEMINI_API_KEY_2,
       });
 
-      const queryEmbedding = await embeddings.embedQuery("what does allah say about jews");
-      const results = await client.search("Hadith", {
+      const queryEmbedding = await embeddings.embedQuery(query);
+      const results = await client.search(collectionName, {
         vector: queryEmbedding,
         limit: 5,
       });
-      console.log("queryEmbedding",queryEmbedding);
-      console.log("results from",results);
+      console.log("results from qdrant db ",results);
       return results;
     } catch (error: any) {
       console.log(`Key failed: ${error}`);

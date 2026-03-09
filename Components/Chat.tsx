@@ -373,16 +373,38 @@ const markdownComponents = {
   },
 };
 
+// Helper function to detect language (basic implementation)
+const detectLanguage = (text: string): "urdu" | "arabic" | "default" => {
+  const urduRegex = /[\u0600-\u06FF]/; // Urdu script range
+  const arabicRegex = /[\u0600-\u06FF]/; // Arabic script range (overlaps with Urdu)
+
+  if (urduRegex.test(text)) return "urdu";
+  if (arabicRegex.test(text)) return "arabic";
+  return "default";
+};
+
 // --- Markdown Renderer ---
 const MarkdownWithHighlight = React.memo(
-  ({ markdown }: { markdown: string }) => (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={markdownComponents as any}
-    >
-      {markdown}
-    </ReactMarkdown>
-  ),
+  ({ markdown }: { markdown: string }) => {
+    const language = detectLanguage(markdown);
+    const fontClass =
+      language === "urdu"
+        ? "font-urdu"
+        : language === "arabic"
+        ? "font-arabic"
+        : "";
+
+    return (
+      <div className={fontClass}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={markdownComponents as any}
+        >
+          {markdown}
+        </ReactMarkdown>
+      </div>
+    );
+  },
   (prev, next) => prev.markdown === next.markdown
 );
 MarkdownWithHighlight.displayName = "MarkdownWithHighlight";

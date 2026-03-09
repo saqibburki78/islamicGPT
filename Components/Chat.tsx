@@ -528,29 +528,35 @@ export default function Chat() {
     onFinish: () => {
       setIsTyping(false);
     },
-    onError: (err) => {
+    onError: (err: any) => {
       setIsTyping(false);
+      console.error("Chat error:", err);
 
-      // Classify and show appropriate toast
-      //     const msg = err?.message || "Unknown error";
-      //     if (msg.includes("fetch") || msg.includes("network")) {
-      //       toast.error("Network error. Please check your connection.", {
-      //         icon: "🌐",
-      //       });
-      //     } else if (msg.includes("rate limit") || msg.includes("429")) {
-      //       toast.warn("Rate limited. Please wait a moment before retrying.", {
-      //         icon: "⏳",
-      //       });
-      //     } else if (msg.includes("timeout")) {
-      //       toast.warn("Request timed out. Please try again.", { icon: "⏱️" });
-      //     } else {
-      //       toast.error("Something went wrong. Please try again.", { icon: "⚠️" });
-      //     }
+      // Classify error messages for better user feedback
+      const errorMessage =
+        typeof err === "string" ? err : err?.message || "An unknown error occurred.";
 
-      //     console.error("Chat error:", err);
+      if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
+        toast.warn("Rate limited. Please wait a moment before retrying.", {
+        });
+      } else if (errorMessage.includes("quota exceeded") || errorMessage.includes("quota")) {
+        toast.error("Quota exhausted. Please upgrade your plan or try again later.", {
+        });
+      } else if (errorMessage.includes("timeout") || errorMessage.includes("TIMEOUT")) {
+        toast.warn("Request timed out. Please try again.", {
+        });
+      } else if (errorMessage.includes("API key") || errorMessage.includes("401") || errorMessage.includes("403")) {
+        toast.error("Authentication error. Please contact support.", {
+        });
+      } else if (errorMessage.includes("500") || errorMessage.includes("Internal Server")) {
+        toast.error("Server error. Please try again in a few moments.", {
+        });
+      } else {
+        toast.error("An error occurred. Please try again.", {
+        });
+      }
     },
   });
-
   // Sync typing state
   useEffect(() => {
     setIsTyping(status === "submitted" || status === "streaming");
